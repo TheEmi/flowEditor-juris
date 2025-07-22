@@ -58,15 +58,15 @@ const FlowRenderer = (props, context) => {
   const confirmDeleteNode = (nodeId) => {
     const nodes = getState("flowNodes", []);
     const connections = getState("flowConnections", []);
-    
+
     // Remove node
     const updatedNodes = nodes.filter(n => n.id !== nodeId);
     setState("flowNodes", updatedNodes);
-    
+
     // Remove connections involving this node
     const updatedConnections = connections.filter(c => c.from !== nodeId && c.to !== nodeId);
     setState("flowConnections", updatedConnections);
-    
+
     setState("nodeToDelete", null);
     setState("toastMessage", "Node deleted!");
     setTimeout(() => setState("toastMessage", null), 3000);
@@ -121,7 +121,7 @@ const FlowRenderer = (props, context) => {
       const y1 = from.y + 40; // Center of taller node
       const x2 = to.x + 96;
       const y2 = to.y + 40;
-      
+
       // Calculate midpoint for delete button
       const midX = (x1 + x2) / 2;
       const midY = (y1 + y2) / 2;
@@ -148,7 +148,7 @@ const FlowRenderer = (props, context) => {
         // Arrow head
         {
           polygon: {
-            points: `${x2-8},${y2-4} ${x2},${y2} ${x2-8},${y2+4}`,
+            points: `${x2 - 8},${y2 - 4} ${x2},${y2} ${x2 - 8},${y2 + 4}`,
             fill: isHovered ? "#e11d48" : "#8b5cf6",
             stroke: "none"
           }
@@ -239,13 +239,13 @@ const FlowRenderer = (props, context) => {
         ontouchend: onMouseUp,
         children: () => {
           const nodes = getState("flowNodes", []);
-          
+
           // Calculate canvas bounds
           const minX = Math.min(...nodes.map(n => n.x), 0) - 200;
           const maxX = Math.max(...nodes.map(n => n.x + 200), 1600);
           const minY = Math.min(...nodes.map(n => n.y), 0) - 200;
           const maxY = Math.max(...nodes.map(n => n.y + 100), 1200);
-          
+
           return [
             // Scrollable content container
             {
@@ -295,199 +295,202 @@ const FlowRenderer = (props, context) => {
                   }] : []),
                   // Nodes
                   ...nodes.map((node, index) => {
-              const isConnecting = connectionMode?.from === node.id;
-              const nodeData = getState(`flowNodes.${index}`);
-              const isIngredient = node.type === "ingredient" || node.type === "type 1";
-              
-              return {
-                div: {
-                  class: () => {
-                    const baseClasses = "group absolute w-48 md:w-48 sm:w-40 p-4 rounded-2xl shadow-xl cursor-move transition-all duration-300 transform hover:scale-105 border-2 touch-manipulation";
-                    const typeClasses = isIngredient 
-                      ? "bg-gradient-to-br from-amber-100 to-orange-200 border-amber-300 hover:from-amber-200 hover:to-orange-300" 
-                      : "bg-gradient-to-br from-blue-100 to-cyan-200 border-blue-300 hover:from-blue-200 hover:to-cyan-300";
-                    const connectingClasses = isConnecting ? "ring-4 ring-purple-400 ring-opacity-75 scale-110" : "";
-                    
-                    return `${baseClasses} ${typeClasses} ${connectingClasses}`;
-                  },
-                  style: () => ({
-                    left: nodeData.x + "px",
-                    top: nodeData.y + "px",
-                    zIndex: isConnecting ? 20 : 10
-                  }),
-                  onmousedown: (e) => {
-                    e.preventDefault();
-                    const nodeRect = e.currentTarget.getBoundingClientRect();
-                    const offsetX = e.clientX - nodeRect.left;
-                    const offsetY = e.clientY - nodeRect.top;
+                    const isConnecting = connectionMode?.from === node.id;
+                    const nodeData = getState(`flowNodes.${index}`);
+                    const isIngredient = node.type === "ingredient" || node.type === "type 1";
 
-                    setState("draggingNodeId", node.id);
-                    setState("dragOffset", { x: offsetX, y: offsetY });
-                  },
-                  ontouchstart: (e) => {
-                    e.preventDefault();
-                    const touch = e.touches[0];
-                    const nodeRect = e.currentTarget.getBoundingClientRect();
-                    const offsetX = touch.clientX - nodeRect.left;
-                    const offsetY = touch.clientY - nodeRect.top;
+                    return {
+                      div: {
+                        class: () => {
+                          const baseClasses = "group absolute w-48 md:w-48 sm:w-40 p-4 rounded-2xl shadow-xl cursor-move transition-all duration-300 transform hover:scale-105 border-2 touch-manipulation";
+                          const typeClasses = isIngredient
+                            ? "bg-gradient-to-br from-amber-100 to-orange-200 border-amber-300 hover:from-amber-200 hover:to-orange-300"
+                            : "bg-gradient-to-br from-blue-100 to-cyan-200 border-blue-300 hover:from-blue-200 hover:to-cyan-300";
+                          const connectingClasses = isConnecting ? "ring-4 ring-purple-400 ring-opacity-75 scale-110" : "";
 
-                    setState("draggingNodeId", node.id);
-                    setState("dragOffset", { x: offsetX, y: offsetY });
-                  },
-                  onclick: () => handleNodeClick(node),
-                  oncontextmenu: (e) => handleNodeRightClick(e, node),
-                  children: [
-                    // Node header with icon
-                    {
-                      div: {
-                        class: "flex items-center gap-2 mb-2",
+                          return `${baseClasses} ${typeClasses} ${connectingClasses}`;
+                        },
+                        style: () => ({
+                          left: nodeData.x + "px",
+                          top: nodeData.y + "px",
+                          zIndex: isConnecting ? 20 : 10
+                        }),
+                        onmousedown: (e) => {
+                          e.preventDefault();
+                          const nodeRect = e.currentTarget.getBoundingClientRect();
+                          const offsetX = e.clientX - nodeRect.left;
+                          const offsetY = e.clientY - nodeRect.top;
+
+                          setState("draggingNodeId", node.id);
+                          setState("dragOffset", { x: offsetX, y: offsetY });
+                        },
+                        ontouchstart: (e) => {
+                          e.preventDefault();
+                          const touch = e.touches[0];
+                          const nodeRect = e.currentTarget.getBoundingClientRect();
+                          const offsetX = touch.clientX - nodeRect.left;
+                          const offsetY = touch.clientY - nodeRect.top;
+
+                          setState("draggingNodeId", node.id);
+                          setState("dragOffset", { x: offsetX, y: offsetY });
+                        },
+                        onclick: () => handleNodeClick(node),
+                        oncontextmenu: (e) => handleNodeRightClick(e, node),
                         children: [
-                          {
-                            span: {
-                              class: "text-2xl",
-                              text: node.icon || (isIngredient ? "🥄" : "⚡")
-                            }
-                          },
-                          {
-                            h3: {
-                              class: "font-bold text-sm text-gray-800 flex-1",
-                              text: node.label.replace(/^[^\s]+\s/, '') || node.label,
-                            }
-                          }
-                        ]
-                      }
-                    },
-                    // Node details
-                    {
-                      div: {
-                        class: "space-y-1",
-                        children: [
-                          ...(isIngredient ? [
-                            {
-                              div: {
-                                class: "flex items-center gap-2",
-                                children: [
-                                  { span: { class: "text-xs text-amber-600", text: "📏" } },
-                                  { span: { class: "text-xs text-gray-600", text: node.quantity } }
-                                ]
-                              }
-                            }
-                          ] : [
-                            {
-                              div: {
-                                class: "flex items-center gap-2",
-                                children: [
-                                  { span: { class: "text-xs text-blue-600", text: "⚡" } },
-                                  { span: { class: "text-xs text-gray-600", text: node.action } }
-                                ]
-                              }
-                            },
-                            {
-                              div: {
-                                class: "flex items-center gap-2",
-                                children: [
-                                  { span: { class: "text-xs text-blue-600", text: "⏱️" } },
-                                  { span: { class: "text-xs text-gray-600", text: node.duration } }
-                                ]
-                              }
-                            }
-                          ])
-                        ]
-                      }
-                    },
-                    // Connection indicators
-                    ...(isConnecting ? [{
-                      div: {
-                        class: "absolute -top-3 -right-3 w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg animate-pulse",
-                        text: "🔗"
-                      }
-                    }] : []),
-                    // Mobile action buttons
-                    {
-                      div: {
-                        class: "absolute -top-2 -right-2 flex gap-1",
-                        children: [
-                          {
-                            button: {
-                              class: "w-6 h-6 bg-purple-500 hover:bg-purple-600 text-white rounded-full flex items-center justify-center text-xs shadow-lg opacity-0 group-hover:opacity-100 md:opacity-100 transition-all duration-200",
-                              text: "🔗",
-                              onclick: (e) => {
-                                e.stopPropagation();
-                                handleConnectButtonClick(node.id);
-                              }
-                            }
-                          },
-                          {
-                            button: {
-                              class: "w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg opacity-0 group-hover:opacity-100 md:opacity-100 transition-all duration-200",
-                              text: "✕",
-                              onclick: (e) => {
-                                e.stopPropagation();
-                                handleDeleteNode(node.id);
-                              }
-                            }
-                          }
-                        ]
-                      }
-                    },
-                    // Hover actions
-                    {
-                      div: {
-                        class: "absolute -bottom-2 left-1/2 transform -translate-x-1/2 opacity-0 hover:opacity-100 transition-opacity bg-white rounded-full shadow-lg px-3 py-1",
-                        children: [
+                          // Node header with icon
                           {
                             div: {
-                              class: "flex items-center gap-2 text-xs text-gray-600",
+                              class: "flex items-center gap-2 mb-2",
                               children: [
-                                { span: { text: "💭" } },
-                                { span: { text: "Click to edit • Right-click to connect" } }
+                                {
+                                  span: {
+                                    class: "text-2xl",
+                                    text: node.icon || (isIngredient ? "🥄" : "⚡")
+                                  }
+                                },
+                                {
+                                  h3: {
+                                    class: "font-bold text-sm text-gray-800 flex-1",
+                                    text: node.label.replace(/^[^\s]+\s/, '') || node.label,
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          // Node details
+                          {
+                            div: {
+                              class: "space-y-1",
+                              children: [
+                                ...(isIngredient ? [
+                                  {
+                                    div: {
+                                      class: "flex items-center gap-2",
+                                      children: [
+                                        { span: { class: "text-xs text-amber-600", text: "📏" } },
+                                        { span: { class: "text-xs text-gray-600", text: node.quantity } }
+                                      ]
+                                    }
+                                  }
+                                ] : [
+                                  {
+                                    div: {
+                                      class: "flex items-center gap-2",
+                                      children: [
+                                        { span: { class: "text-xs text-blue-600", text: "⚡" } },
+                                        { span: { class: "text-xs text-gray-600", text: node.action } }
+                                      ]
+                                    }
+                                  },
+                                  {
+                                    div: {
+                                      class: "flex items-center gap-2",
+                                      children: [
+                                        { span: { class: "text-xs text-blue-600", text: "⏱️" } },
+                                        { span: { class: "text-xs text-gray-600", text: node.duration } }
+                                      ]
+                                    }
+                                  }
+                                ])
+                              ]
+                            }
+                          },
+                          // Connection indicators
+                          ...(isConnecting ? [{
+                            div: {
+                              class: "absolute -top-3 -right-3 w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg animate-pulse",
+                              text: "🔗"
+                            }
+                          }] : []),
+                          // Mobile action buttons
+                          {
+                            div: {
+                              class: "absolute -top-2 -right-2 flex gap-1",
+                              children: [
+                                {
+                                  button: {
+                                    class: "w-6 h-6 bg-purple-500 hover:bg-purple-600 text-white rounded-full flex items-center justify-center text-xs shadow-lg opacity-0 group-hover:opacity-100 md:opacity-100 transition-all duration-200",
+                                    text: "🔗",
+                                    onclick: (e) => {
+                                      e.stopPropagation();
+                                      handleConnectButtonClick(node.id);
+                                    }
+                                  }
+                                },
+                                {
+                                  button: {
+                                    class: "w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg opacity-0 group-hover:opacity-100 md:opacity-100 transition-all duration-200",
+                                    text: "✕",
+                                    onclick: (e) => {
+                                      e.stopPropagation();
+                                      handleDeleteNode(node.id);
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          // Hover actions
+                          {
+                            div: {
+                              class: "absolute -bottom-2 left-1/2 transform -translate-x-1/2 opacity-0 hover:opacity-100 transition-opacity bg-white rounded-full shadow-lg px-3 py-1",
+                              children: [
+                                {
+                                  div: {
+                                    class: "flex items-center gap-2 text-xs text-gray-600",
+                                    children: [
+                                      { span: { text: "💭" } },
+                                      { span: { text: "Click to edit • Right-click to connect" } }
+                                    ]
+                                  }
+                                }
                               ]
                             }
                           }
-                        ]
-                      }
-                    }
-                  ],
-                },
-              };
+                        ],
+                      },
+                    };
                   }),
                   // Node deletion confirmation
                   ...(getState("nodeToDelete") ? [{
-              div: {
-                class: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50",
-                children: [
-                  {
                     div: {
-                      class: "bg-white rounded-2xl p-6 max-w-md mx-4",
+                      class: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50",
                       children: [
                         {
-                          h3: {
-                            class: "text-xl font-bold text-gray-800 mb-4",
-                            text: "🗑️ Delete Node"
-                          }
-                        },
-                        {
-                          p: {
-                            class: "text-gray-600 mb-6",
-                            text: "Are you sure you want to delete this node? All connections will also be removed."
-                          }
-                        },
-                        {
                           div: {
-                            class: "flex gap-3 justify-end",
+                            class: "bg-white rounded-2xl p-6 max-w-md mx-4",
                             children: [
                               {
-                                button: {
-                                  class: "px-4 py-2 bg-gray-200 rounded-lg text-gray-800",
-                                  text: "Cancel",
-                                  onclick: () => setState("nodeToDelete", null)
+                                h3: {
+                                  class: "text-xl font-bold text-gray-800 mb-4",
+                                  text: "🗑️ Delete Node"
                                 }
                               },
                               {
-                                button: {
-                                  class: "px-4 py-2 bg-red-500 text-white rounded-lg",
-                                  text: "Delete",
-                                  onclick: () => confirmDeleteNode(getState("nodeToDelete"))
+                                p: {
+                                  class: "text-gray-600 mb-6",
+                                  text: "Are you sure you want to delete this node? All connections will also be removed."
+                                }
+                              },
+                              {
+                                div: {
+                                  class: "flex gap-3 justify-end",
+                                  children: [
+                                    {
+                                      button: {
+                                        class: "px-4 py-2 bg-gray-200 rounded-lg text-gray-800",
+                                        text: "Cancel",
+                                        onclick: () => setState("nodeToDelete", null)
+                                      }
+                                    },
+                                    {
+                                      button: {
+                                        class: "px-4 py-2 bg-red-500 text-white rounded-lg",
+                                        text: "Delete",
+                                        onclick: () => confirmDeleteNode(getState("nodeToDelete"))
+                                      }
+                                    }
+                                  ]
                                 }
                               }
                             ]
@@ -495,10 +498,7 @@ const FlowRenderer = (props, context) => {
                         }
                       ]
                     }
-                  }
-                ]
-              }
-            }] : [])
+                  }] : [])
                 ]
               }
             ]
