@@ -112,9 +112,9 @@ const FlowRenderer = (props, context) => {
       nodeMap[node.id] = node;
     });
 
-          return connections.map((conn, index) => {
-        const from = nodeMap[conn.from];
-        const to = nodeMap[conn.to];
+    return connections.map((conn, index) => {
+      const from = nodeMap[conn.from];
+      const to = nodeMap[conn.to];
       if (!from || !to) return null;
 
       const x1 = from.x + 96; // Center of wider node
@@ -268,33 +268,33 @@ const FlowRenderer = (props, context) => {
                       }
                     }
                   },
-            // SVG for connections
-            {
-              svg: {
-                class: "absolute inset-0 w-full h-full",
-                children: renderConnections,
-              },
-            },
-            // Connection mode overlay
-            ...(connectionMode ? [{
-              div: {
-                class: "absolute top-4 left-1/2 transform -translate-x-1/2 bg-purple-600 text-white px-6 py-3 rounded-full shadow-lg z-10",
-                children: [
+                  // SVG for connections
                   {
+                    svg: {
+                      class: "absolute inset-0 w-full h-full",
+                      children: renderConnections,
+                    },
+                  },
+                  // Connection mode overlay
+                  ...(connectionMode ? [{
                     div: {
-                      class: "flex items-center gap-2",
+                      class: "absolute top-4 left-1/2 transform -translate-x-1/2 bg-purple-600 text-white px-6 py-3 rounded-full shadow-lg z-10",
                       children: [
-                        { span: { class: "text-lg", text: "🔗" } },
-                        { span: { class: "font-semibold", text: "Connection Mode" } },
-                        { span: { class: "text-sm opacity-80", text: "Click another node to connect" } }
+                        {
+                          div: {
+                            class: "flex items-center gap-2",
+                            children: [
+                              { span: { class: "text-lg", text: "🔗" } },
+                              { span: { class: "font-semibold", text: "Connection Mode" } },
+                              { span: { class: "text-sm opacity-80", text: "Click another node to connect" } }
+                            ]
+                          }
+                        }
                       ]
                     }
-                  }
-                ]
-              }
-            }] : []),
-            // Nodes
-            ...nodes.map((node, index) => {
+                  }] : []),
+                  // Nodes
+                  ...nodes.map((node, index) => {
               const isConnecting = connectionMode?.from === node.id;
               const nodeData = getState(`flowNodes.${index}`);
               const isIngredient = node.type === "ingredient" || node.type === "type 1";
@@ -450,9 +450,9 @@ const FlowRenderer = (props, context) => {
                   ],
                 },
               };
-            }),
-            // Node deletion confirmation
-            ...(getState("nodeToDelete") ? [{
+                  }),
+                  // Node deletion confirmation
+                  ...(getState("nodeToDelete") ? [{
               div: {
                 class: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50",
                 children: [
@@ -498,7 +498,7 @@ const FlowRenderer = (props, context) => {
                   }
                 ]
               }
-                         }] : [])
+            }] : [])
                 ]
               }
             ]
