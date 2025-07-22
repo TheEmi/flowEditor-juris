@@ -107,13 +107,6 @@ const EditorPage = (props, context) => {
                         div: {
                           class: "flex items-center gap-3",
                           children: [
-                            {
-                              button: {
-                                class: "md:hidden bg-white/20 hover:bg-white/30 p-2 rounded-lg",
-                                text: "☰",
-                                onclick: () => setState("isSidebarOpen", true)
-                              }
-                            },
                             { span: { class: "text-2xl", text: "🍳" } },
                             {
                               h1: {
@@ -161,7 +154,7 @@ const EditorPage = (props, context) => {
           // Main content
           {
             div: {
-              class: "flex flex-1 overflow-hidden relative",
+              class: "flex flex-1 overflow-hidden",
               children: [
                 {FlowEditorSidebar},
                 {
@@ -172,15 +165,7 @@ const EditorPage = (props, context) => {
                       {NodeEditDialog}
                     ]
                   }
-                },
-                // Mobile overlay when sidebar is open
-                ...(getState("isSidebarOpen") ? [{
-                  div: {
-                    class: "md:hidden fixed inset-0 bg-black bg-opacity-50 z-20",
-                    onclick: () => setState("isSidebarOpen", false),
-                    ontouchstart: () => setState("isSidebarOpen", false)
-                  }
-                }] : [])
+                }
               ]
             }
           },
