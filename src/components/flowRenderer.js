@@ -6,6 +6,12 @@ const FlowRenderer = (props, context) => {
     const draggingNodeId = getState("draggingNodeId", null);
     if (!draggingNodeId) return;
 
+    // Throttle updates to improve performance
+    const now = Date.now();
+    const lastUpdate = getState("lastMoveUpdate", 0);
+    if (now - lastUpdate < 16) return; // ~60fps max
+    setState("lastMoveUpdate", now);
+
     const nodes = getState("flowNodes", []);
     const nodeIndex = nodes.findIndex(n => n.id === draggingNodeId);
     if (nodeIndex === -1) return;
@@ -19,10 +25,10 @@ const FlowRenderer = (props, context) => {
     const x = clientX - canvasRect.left - dragOffset.x;
     const y = clientY - canvasRect.top - dragOffset.y;
 
-    let node = JSON.parse(JSON.stringify(nodes[nodeIndex]));
-    node.x = x;
-    node.y = y;
-    setState(`flowNodes.${nodeIndex}`, node);
+    // Update only the specific node position directly
+    const updatedNodes = [...nodes];
+    updatedNodes[nodeIndex] = { ...updatedNodes[nodeIndex], x, y };
+    setState("flowNodes", updatedNodes);
   };
 
   const onMouseUp = () => {
@@ -145,16 +151,44 @@ const FlowRenderer = (props, context) => {
           circle: {
             cx: midX,
             cy: midY,
-            r: 15,
+            r: 20,
             fill: "transparent",
             onmouseenter: () => onLineHover(conn),
             onmouseleave: () => onLineLeave(),
+            ontouchstart: () => onLineHover(conn),
+            onclick: () => {
+              if (!getState("hoverLine")) {
+                onLineHover(conn);
+              } else {
+                handleDeleteConnection(conn);
+              }
+            },
             style: "cursor: pointer;"
           }
         }
       ];
 
       if (isHovered) {
+        // Larger clickable area for easier interaction
+        connectionElements.push({
+          circle: {
+            cx: midX,
+            cy: midY,
+            r: 20,
+            fill: "transparent",
+            onclick: (e) => {
+              e.stopPropagation();
+              handleDeleteConnection(conn);
+            },
+            ontouchstart: (e) => {
+              e.stopPropagation();
+              handleDeleteConnection(conn);
+            },
+            style: "cursor: pointer;"
+          }
+        });
+
+        // Visible delete button
         connectionElements.push({
           circle: {
             cx: midX,
@@ -163,14 +197,11 @@ const FlowRenderer = (props, context) => {
             fill: "#ef4444",
             stroke: "#fff",
             "stroke-width": 2,
-            onclick: (e) => {
-              e.stopPropagation();
-              handleDeleteConnection(conn);
-            },
-            style: "cursor: pointer;"
+            style: "pointer-events: none;"
           }
         });
 
+        // Delete icon
         connectionElements.push({
           text: {
             x: midX,
@@ -179,8 +210,8 @@ const FlowRenderer = (props, context) => {
             "font-size": "12",
             "text-anchor": "middle",
             "dominant-baseline": "middle",
-            style: "pointer-events: none;",
-            text: "🗑"
+            style: "pointer-events: none; user-select: none;",
+            text: "✕"
           }
         });
       }
@@ -363,9 +394,13 @@ const FlowRenderer = (props, context) => {
                               children: [
                                 {
                                   button: {
-                                    class: "w-6 h-6 bg-purple-500 hover:bg-purple-600 text-white rounded-full flex items-center justify-center text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200",
+                                    class: "w-7 h-7 bg-purple-500 hover:bg-purple-600 text-white rounded-full flex items-center justify-center text-xs shadow-lg opacity-80 md:opacity-0 md:group-hover:opacity-100 transition-all duration-200",
                                     text: "🔗",
                                     onclick: (e) => {
+                                      e.stopPropagation();
+                                      handleConnectButtonClick(node.id);
+                                    },
+                                    ontouchstart: (e) => {
                                       e.stopPropagation();
                                       handleConnectButtonClick(node.id);
                                     }
@@ -373,9 +408,13 @@ const FlowRenderer = (props, context) => {
                                 },
                                 {
                                   button: {
-                                    class: "w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200",
+                                    class: "w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg opacity-80 md:opacity-0 md:group-hover:opacity-100 transition-all duration-200",
                                     text: "✕",
                                     onclick: (e) => {
+                                      e.stopPropagation();
+                                      handleDeleteNode(node.id);
+                                    },
+                                    ontouchstart: (e) => {
                                       e.stopPropagation();
                                       handleDeleteNode(node.id);
                                     }

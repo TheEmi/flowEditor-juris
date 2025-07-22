@@ -177,7 +177,8 @@ const EditorPage = (props, context) => {
                 ...(getState("isSidebarOpen") ? [{
                   div: {
                     class: "md:hidden fixed inset-0 bg-black bg-opacity-50 z-20",
-                    onclick: () => setState("isSidebarOpen", false)
+                    onclick: () => setState("isSidebarOpen", false),
+                    ontouchstart: () => setState("isSidebarOpen", false)
                   }
                 }] : [])
               ]

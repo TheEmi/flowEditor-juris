@@ -77,7 +77,17 @@ const FlowEditorSidebar = (props, context) => {
   return {
     render: () => ({
       div: {
-        class: () => `${isSidebarOpen ? 'w-96' : 'w-16'} transition-all duration-300 h-screen bg-gradient-to-br from-purple-50 to-pink-50 border-r border-purple-200 shadow-xl overflow-y-auto md:relative absolute md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-80'} z-30`,
+        class: () => {
+          const baseClasses = "transition-all duration-300 h-screen bg-gradient-to-br from-purple-50 to-pink-50 border-r border-purple-200 shadow-xl overflow-y-auto z-30";
+          
+          // Desktop: always show sidebar, just change width
+          // Mobile: slide in/out completely
+          if (isSidebarOpen) {
+            return `w-96 ${baseClasses} md:relative absolute md:translate-x-0 translate-x-0`;
+          } else {
+            return `w-0 md:w-16 ${baseClasses} md:relative absolute md:translate-x-0 -translate-x-full`;
+          }
+        },
         children: [
           // Header with toggle
           {
@@ -96,7 +106,7 @@ const FlowEditorSidebar = (props, context) => {
                       },
                       {
                         button: {
-                          class: "md:hidden text-white hover:bg-white/20 p-2 rounded",
+                          class: "text-white hover:bg-white/20 p-2 rounded transition-colors",
                           text: "←",
                           onclick: () => setState("isSidebarOpen", false)
                         }
@@ -113,8 +123,8 @@ const FlowEditorSidebar = (props, context) => {
               ] : [
                 {
                   button: {
-                    class: "w-full text-white hover:bg-white/20 p-2 rounded",
-                    text: "→",
+                    class: "w-full text-white hover:bg-white/20 p-2 rounded transition-colors flex items-center justify-center",
+                    text: "☰",
                     onclick: () => setState("isSidebarOpen", true)
                   }
                 }
