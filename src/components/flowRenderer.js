@@ -13,8 +13,12 @@ const FlowRenderer = (props, context) => {
     const dragOffset = getState("dragOffset", { x: 0, y: 0 });
     const canvasRect = e.currentTarget.getBoundingClientRect();
 
-    const x = e.clientX - canvasRect.left - dragOffset.x;
-    const y = e.clientY - canvasRect.top - dragOffset.y;
+    // Handle both mouse and touch events
+    const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+    const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+
+    const x = clientX - canvasRect.left - dragOffset.x;
+    const y = clientY - canvasRect.top - dragOffset.y;
 
     let node = JSON.parse(JSON.stringify(nodes[nodeIndex]));
     node.x = x;
@@ -48,23 +52,33 @@ const FlowRenderer = (props, context) => {
   };
 
   const handleDeleteNode = (nodeId) => {
-    if (confirm("🗑️ Are you sure you want to delete this node?")) {
-      const nodes = getState("flowNodes", []);
-      const connections = getState("flowConnections", []);
-      
-      // Remove node
-      const updatedNodes = nodes.filter(n => n.id !== nodeId);
-      setState("flowNodes", updatedNodes);
-      
-      // Remove connections involving this node
-      const updatedConnections = connections.filter(c => c.from !== nodeId && c.to !== nodeId);
-      setState("flowConnections", updatedConnections);
-    }
+    setState("nodeToDelete", nodeId);
+  };
+
+  const confirmDeleteNode = (nodeId) => {
+    const nodes = getState("flowNodes", []);
+    const connections = getState("flowConnections", []);
+    
+    // Remove node
+    const updatedNodes = nodes.filter(n => n.id !== nodeId);
+    setState("flowNodes", updatedNodes);
+    
+    // Remove connections involving this node
+    const updatedConnections = connections.filter(c => c.from !== nodeId && c.to !== nodeId);
+    setState("flowConnections", updatedConnections);
+    
+    setState("nodeToDelete", null);
+    setState("toastMessage", "Node deleted!");
+    setTimeout(() => setState("toastMessage", null), 3000);
   };
 
   const handleNodeRightClick = (e, node) => {
     e.preventDefault();
     handleStartConnection(node.id);
+  };
+
+  const handleConnectButtonClick = (nodeId) => {
+    handleStartConnection(nodeId);
   };
 
   const handleStartConnection = (nodeId) => {
@@ -92,9 +106,15 @@ const FlowRenderer = (props, context) => {
     const nodes = getState("flowNodes", []);
     const hoverLine = getState("hoverLine", null);
 
-    return connections.map((conn, index) => {
-      const from = nodes.find(n => n.id === conn.from);
-      const to = nodes.find(n => n.id === conn.to);
+    // Create a lookup map for faster node access
+    const nodeMap = {};
+    nodes.forEach(node => {
+      nodeMap[node.id] = node;
+    });
+
+          return connections.map((conn, index) => {
+        const from = nodeMap[conn.from];
+        const to = nodeMap[conn.to];
       if (!from || !to) return null;
 
       const x1 = from.x + 96; // Center of wider node
@@ -166,17 +186,15 @@ const FlowRenderer = (props, context) => {
           }
         });
 
-        // Square delete button background
+        // Larger delete button background for easier clicking
         connectionElements.push({
-          rect: {
-            x: midX - 10,
-            y: midY - 10,
-            width: 20,
-            height: 20,
-            fill: "#ff6b6b",
+          circle: {
+            cx: midX,
+            cy: midY,
+            r: 12,
+            fill: "#ef4444",
             stroke: "#fff",
             "stroke-width": 2,
-            rx: 3,
             onclick: (e) => {
               e.stopPropagation();
               handleDeleteConnection(conn);
@@ -187,18 +205,18 @@ const FlowRenderer = (props, context) => {
           }
         });
 
-        // X symbol - properly centered
+        // Trash icon
         connectionElements.push({
           text: {
             x: midX,
             y: midY,
             fill: "#fff",
-            "font-size": "14",
+            "font-size": "12",
             "font-weight": "bold",
             "text-anchor": "middle",
             "dominant-baseline": "middle",
             style: "cursor: pointer; user-select: none; pointer-events: none;",
-            text: "✕"
+            text: "🗑"
           }
         });
       }
@@ -214,22 +232,42 @@ const FlowRenderer = (props, context) => {
   return {
     render: () => ({
       div: {
-        class: "relative w-full h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 overflow-hidden",
+        class: "relative w-full h-full bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 overflow-auto",
         onmousemove: onMouseMove,
         onmouseup: onMouseUp,
+        ontouchmove: onMouseMove,
+        ontouchend: onMouseUp,
         children: () => {
           const nodes = getState("flowNodes", []);
+          
+          // Calculate canvas bounds
+          const minX = Math.min(...nodes.map(n => n.x), 0) - 200;
+          const maxX = Math.max(...nodes.map(n => n.x + 200), 1600);
+          const minY = Math.min(...nodes.map(n => n.y), 0) - 200;
+          const maxY = Math.max(...nodes.map(n => n.y + 100), 1200);
+          
           return [
-            // Background pattern
+            // Scrollable content container
             {
               div: {
-                class: "absolute inset-0 opacity-30",
+                class: "relative",
                 style: {
-                  backgroundImage: "radial-gradient(circle at 25px 25px, lightgray 2px, transparent 0)",
-                  backgroundSize: "50px 50px"
-                }
-              }
-            },
+                  width: `${maxX - minX}px`,
+                  height: `${maxY - minY}px`,
+                  minWidth: "100%",
+                  minHeight: "100%"
+                },
+                children: [
+                  // Background pattern
+                  {
+                    div: {
+                      class: "absolute inset-0 opacity-30",
+                      style: {
+                        backgroundImage: "radial-gradient(circle at 25px 25px, lightgray 2px, transparent 0)",
+                        backgroundSize: "50px 50px"
+                      }
+                    }
+                  },
             // SVG for connections
             {
               svg: {
@@ -264,7 +302,7 @@ const FlowRenderer = (props, context) => {
               return {
                 div: {
                   class: () => {
-                    const baseClasses = "group absolute w-48 p-4 rounded-2xl shadow-xl cursor-move transition-all duration-300 transform hover:scale-105 border-2";
+                    const baseClasses = "group absolute w-48 md:w-48 sm:w-40 p-4 rounded-2xl shadow-xl cursor-move transition-all duration-300 transform hover:scale-105 border-2 touch-manipulation";
                     const typeClasses = isIngredient 
                       ? "bg-gradient-to-br from-amber-100 to-orange-200 border-amber-300 hover:from-amber-200 hover:to-orange-300" 
                       : "bg-gradient-to-br from-blue-100 to-cyan-200 border-blue-300 hover:from-blue-200 hover:to-cyan-300";
@@ -282,6 +320,16 @@ const FlowRenderer = (props, context) => {
                     const nodeRect = e.currentTarget.getBoundingClientRect();
                     const offsetX = e.clientX - nodeRect.left;
                     const offsetY = e.clientY - nodeRect.top;
+
+                    setState("draggingNodeId", node.id);
+                    setState("dragOffset", { x: offsetX, y: offsetY });
+                  },
+                  ontouchstart: (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const nodeRect = e.currentTarget.getBoundingClientRect();
+                    const offsetX = touch.clientX - nodeRect.left;
+                    const offsetY = touch.clientY - nodeRect.top;
 
                     setState("draggingNodeId", node.id);
                     setState("dragOffset", { x: offsetX, y: offsetY });
@@ -354,15 +402,32 @@ const FlowRenderer = (props, context) => {
                         text: "🔗"
                       }
                     }] : []),
-                    // Delete button
+                    // Mobile action buttons
                     {
-                      button: {
-                        class: "absolute -top-2 -left-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200",
-                        text: "✕",
-                        onclick: (e) => {
-                          e.stopPropagation();
-                          handleDeleteNode(node.id);
-                        }
+                      div: {
+                        class: "absolute -top-2 -right-2 flex gap-1",
+                        children: [
+                          {
+                            button: {
+                              class: "w-6 h-6 bg-purple-500 hover:bg-purple-600 text-white rounded-full flex items-center justify-center text-xs shadow-lg opacity-0 group-hover:opacity-100 md:opacity-100 transition-all duration-200",
+                              text: "🔗",
+                              onclick: (e) => {
+                                e.stopPropagation();
+                                handleConnectButtonClick(node.id);
+                              }
+                            }
+                          },
+                          {
+                            button: {
+                              class: "w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg opacity-0 group-hover:opacity-100 md:opacity-100 transition-all duration-200",
+                              text: "✕",
+                              onclick: (e) => {
+                                e.stopPropagation();
+                                handleDeleteNode(node.id);
+                              }
+                            }
+                          }
+                        ]
                       }
                     },
                     // Hover actions
@@ -386,6 +451,57 @@ const FlowRenderer = (props, context) => {
                 },
               };
             }),
+            // Node deletion confirmation
+            ...(getState("nodeToDelete") ? [{
+              div: {
+                class: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50",
+                children: [
+                  {
+                    div: {
+                      class: "bg-white rounded-2xl p-6 max-w-md mx-4",
+                      children: [
+                        {
+                          h3: {
+                            class: "text-xl font-bold text-gray-800 mb-4",
+                            text: "🗑️ Delete Node"
+                          }
+                        },
+                        {
+                          p: {
+                            class: "text-gray-600 mb-6",
+                            text: "Are you sure you want to delete this node? All connections will also be removed."
+                          }
+                        },
+                        {
+                          div: {
+                            class: "flex gap-3 justify-end",
+                            children: [
+                              {
+                                button: {
+                                  class: "px-4 py-2 bg-gray-200 rounded-lg text-gray-800",
+                                  text: "Cancel",
+                                  onclick: () => setState("nodeToDelete", null)
+                                }
+                              },
+                              {
+                                button: {
+                                  class: "px-4 py-2 bg-red-500 text-white rounded-lg",
+                                  text: "Delete",
+                                  onclick: () => confirmDeleteNode(getState("nodeToDelete"))
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+                         }] : [])
+                ]
+              }
+            ]
           ];
         },
       },

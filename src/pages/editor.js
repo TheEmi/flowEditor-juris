@@ -52,14 +52,21 @@ const EditorPage = (props, context) => {
     savedRecipes.push(recipe);
     localStorage.setItem("savedRecipes", JSON.stringify(savedRecipes));
     
-    alert("✨ Recipe saved successfully!");
+    // Show toast notification instead of alert
+    setState("toastMessage", "✨ Recipe saved successfully!");
+    setTimeout(() => setState("toastMessage", null), 3000);
   };
 
   const clearCanvas = () => {
-    if (confirm("🗑️ Are you sure you want to clear the canvas? This cannot be undone.")) {
-      setState("flowNodes", []);
-      setState("flowConnections", []);
-    }
+    setState("showClearConfirm", true);
+  };
+
+  const confirmClear = () => {
+    setState("flowNodes", []);
+    setState("flowConnections", []);
+    setState("showClearConfirm", false);
+    setState("toastMessage", "Canvas cleared!");
+    setTimeout(() => setState("toastMessage", null), 3000);
   };
 
   const exportRecipe = () => {
@@ -85,7 +92,7 @@ const EditorPage = (props, context) => {
   return {
     render: () => ({
       div: {
-        class: "flex flex-col h-screen",
+        class: "flex flex-col h-screen relative",
         children: [
           // Top toolbar
           {
@@ -100,6 +107,13 @@ const EditorPage = (props, context) => {
                         div: {
                           class: "flex items-center gap-3",
                           children: [
+                            {
+                              button: {
+                                class: "md:hidden bg-white/20 hover:bg-white/30 p-2 rounded-lg",
+                                text: "☰",
+                                onclick: () => setState("isSidebarOpen", true)
+                              }
+                            },
                             { span: { class: "text-2xl", text: "🍳" } },
                             {
                               h1: {
@@ -112,26 +126,26 @@ const EditorPage = (props, context) => {
                       },
                       {
                         div: {
-                          class: "flex items-center gap-3",
+                          class: "flex items-center gap-2 md:gap-3",
                           children: [
                             {
                               button: {
-                                class: "bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:scale-105",
-                                text: "💾 Save Recipe",
+                                class: "bg-white/20 hover:bg-white/30 px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all duration-200 transform hover:scale-105",
+                                text: "💾 Save",
                                 onclick: saveRecipe
                               }
                             },
                             {
                               button: {
-                                class: "bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:scale-105",
-                                text: "📤 Export JSON",
+                                class: "bg-white/20 hover:bg-white/30 px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all duration-200 transform hover:scale-105",
+                                text: "📤 Export",
                                 onclick: exportRecipe
                               }
                             },
                             {
                               button: {
-                                class: "bg-red-500/80 hover:bg-red-500 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:scale-105",
-                                text: "🗑️ Clear All",
+                                class: "bg-red-500/80 hover:bg-red-500 px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all duration-200 transform hover:scale-105",
+                                text: "🗑️ Clear",
                                 onclick: clearCanvas
                               }
                             }
@@ -147,21 +161,83 @@ const EditorPage = (props, context) => {
           // Main content
           {
             div: {
-              class: "flex flex-1",
+              class: "flex flex-1 overflow-hidden relative",
               children: [
                 {FlowEditorSidebar},
                 {
                   div: {
-                    class: "flex-1 overflow-auto relative",
+                    class: "flex-1 relative",
                     children: ()=> [
                       {FlowRenderer: {exampleRecipe }},
                       {NodeEditDialog}
                     ]
                   }
+                },
+                // Mobile overlay when sidebar is open
+                ...(getState("isSidebarOpen") ? [{
+                  div: {
+                    class: "md:hidden fixed inset-0 bg-black bg-opacity-50 z-20",
+                    onclick: () => setState("isSidebarOpen", false)
+                  }
+                }] : [])
+              ]
+            }
+          },
+          // Toast notifications
+          ...(getState("toastMessage") ? [{
+            div: {
+              class: "fixed top-20 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-pulse",
+              text: getState("toastMessage")
+            }
+          }] : []),
+          // Clear confirmation dialog
+          ...(getState("showClearConfirm") ? [{
+            div: {
+              class: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50",
+              children: [
+                {
+                  div: {
+                    class: "bg-white rounded-2xl p-6 max-w-md mx-4",
+                    children: [
+                      {
+                        h3: {
+                          class: "text-xl font-bold text-gray-800 mb-4",
+                          text: "🗑️ Clear Canvas"
+                        }
+                      },
+                      {
+                        p: {
+                          class: "text-gray-600 mb-6",
+                          text: "Are you sure you want to clear the canvas? This cannot be undone."
+                        }
+                      },
+                      {
+                        div: {
+                          class: "flex gap-3 justify-end",
+                          children: [
+                            {
+                              button: {
+                                class: "px-4 py-2 bg-gray-200 rounded-lg text-gray-800",
+                                text: "Cancel",
+                                onclick: () => setState("showClearConfirm", false)
+                              }
+                            },
+                            {
+                              button: {
+                                class: "px-4 py-2 bg-red-500 text-white rounded-lg",
+                                text: "Clear All",
+                                onclick: confirmClear
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
                 }
               ]
             }
-          }
+          }] : [])
         ]
       }
     })

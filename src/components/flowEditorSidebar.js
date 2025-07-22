@@ -72,20 +72,36 @@ const FlowEditorSidebar = (props, context) => {
   const filter = (arr, keyword) =>
     arr.filter((item) => item.label.toLowerCase().includes(keyword.toLowerCase()));
 
+  const isSidebarOpen = getState("isSidebarOpen", true);
+
   return {
     render: () => ({
       div: {
-        class: "w-96 h-screen bg-gradient-to-br from-purple-50 to-pink-50 border-r border-purple-200 shadow-xl overflow-y-auto",
+        class: () => `${isSidebarOpen ? 'w-96' : 'w-16'} transition-all duration-300 h-screen bg-gradient-to-br from-purple-50 to-pink-50 border-r border-purple-200 shadow-xl overflow-y-auto md:relative absolute md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-80'} z-30`,
         children: [
-          // Header
+          // Header with toggle
           {
             div: {
               class: "p-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white",
-              children: [
+              children: () => isSidebarOpen ? [
                 {
-                  h1: {
-                    class: "text-2xl font-bold mb-2",
-                    text: "✨ Recipe Builder"
+                  div: {
+                    class: "flex items-center justify-between mb-2",
+                    children: [
+                      {
+                        h1: {
+                          class: "text-2xl font-bold",
+                          text: "✨ Recipe Builder"
+                        }
+                      },
+                      {
+                        button: {
+                          class: "md:hidden text-white hover:bg-white/20 p-2 rounded",
+                          text: "←",
+                          onclick: () => setState("isSidebarOpen", false)
+                        }
+                      }
+                    ]
                   }
                 },
                 {
@@ -94,12 +110,20 @@ const FlowEditorSidebar = (props, context) => {
                     text: "Drag & drop to create your perfect recipe"
                   }
                 }
+              ] : [
+                {
+                  button: {
+                    class: "w-full text-white hover:bg-white/20 p-2 rounded",
+                    text: "→",
+                    onclick: () => setState("isSidebarOpen", true)
+                  }
+                }
               ]
             }
           },
           
-          // Ingredients Section
-          {
+          // Ingredients Section - only show when sidebar is open
+          ...(isSidebarOpen ? [{
             div: {
               class: "p-6",
               children: [
@@ -183,10 +207,10 @@ const FlowEditorSidebar = (props, context) => {
                 }
               ]
             }
-          },
+          }] : []),
 
           // Steps Section
-          {
+          ...(isSidebarOpen ? [{
             div: {
               class: "p-6 pt-0",
               children: [
@@ -270,7 +294,7 @@ const FlowEditorSidebar = (props, context) => {
                 }
               ]
             }
-          }
+          }] : [])
         ]
       }
     })
