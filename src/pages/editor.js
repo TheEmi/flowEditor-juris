@@ -5,22 +5,30 @@ const EditorPage = (props, context) => {
     const {getState, setState} = context;
   const exampleRecipe = {
     recipe: {
-      title: "Flow 1",
-      description: "Testing to see reactivity.",
+      title: "Spaghetti Bolognese Flow",
+      description: "A visual recipe for the perfect pasta dish",
       nodes: [
-        { id: "1", type: "type 1", label: "Spaghetti", quantity: "200g", x: 100, y:100 },
-        { id: "2", type: "type 1", label: "Ground Beef", quantity: "300g", x: 100, y:200 },
-        { id: "3", type: "type 1", label: "Tomato Sauce", quantity: "1 cup", x: 100, y:300 },
-        { id: "4", type: "step", action: "Boil", label: "Boil Spaghetti", duration: "10 minutes", x: 400, y:100 },
-        { id: "5", type: "step", action: "Mix", label: "Cook Beef and Sauce", duration: "15 minutes", x: 400, y:250 },
-        { id: "6", type: "step", action: "Combine", label: "Mix Spaghetti with Sauce", duration: "5 minutes", x: 700, y:150 }
+        { id: "node1", type: "ingredient", label: "🍝 Spaghetti", quantity: "400g", icon: "🍝", x: 150, y: 100 },
+        { id: "node2", type: "ingredient", label: "🥩 Ground Beef", quantity: "300g", icon: "🥩", x: 150, y: 220 },
+        { id: "node3", type: "ingredient", label: "🍅 Tomato Sauce", quantity: "1 cup", icon: "🍅", x: 150, y: 340 },
+        { id: "node4", type: "ingredient", label: "🧄 Garlic", quantity: "3 cloves", icon: "🧄", x: 150, y: 460 },
+        { id: "node5", type: "step", action: "Boil", label: "💧 Boil Water", duration: "8 minutes", icon: "💧", x: 450, y: 100 },
+        { id: "node6", type: "step", action: "Cook", label: "🔥 Cook Pasta", duration: "10 minutes", icon: "🔥", x: 750, y: 100 },
+        { id: "node7", type: "step", action: "Sauté", label: "🍳 Sauté Garlic", duration: "2 minutes", icon: "🍳", x: 450, y: 300 },
+        { id: "node8", type: "step", action: "Cook", label: "🥩 Brown Beef", duration: "8 minutes", icon: "🥩", x: 750, y: 300 },
+        { id: "node9", type: "step", action: "Simmer", label: "🥄 Add Sauce & Simmer", duration: "15 minutes", icon: "🥄", x: 1050, y: 300 },
+        { id: "node10", type: "step", action: "Combine", label: "🍽️ Mix & Serve", duration: "3 minutes", icon: "🍽️", x: 1350, y: 200 }
       ],
       connections: [
-        { from: "1", to: "4" },
-        { from: "2", to: "5" },
-        { from: "3", to: "5" },
-        { from: "4", to: "6" },
-        { from: "5", to: "6" }
+        { from: "node1", to: "node5" },
+        { from: "node5", to: "node6" },
+        { from: "node4", to: "node7" },
+        { from: "node2", to: "node8" },
+        { from: "node7", to: "node8" },
+        { from: "node3", to: "node9" },
+        { from: "node8", to: "node9" },
+        { from: "node6", to: "node10" },
+        { from: "node9", to: "node10" }
       ]
     }
   };
@@ -28,18 +36,129 @@ const EditorPage = (props, context) => {
   setState(`flowConnections`, exampleRecipe.recipe.connections);
 
 
+  const saveRecipe = () => {
+    const nodes = getState("flowNodes", []);
+    const connections = getState("flowConnections", []);
+    const recipe = {
+      title: exampleRecipe.recipe.title,
+      description: exampleRecipe.recipe.description,
+      nodes,
+      connections,
+      createdAt: new Date().toISOString()
+    };
+    
+    // Save to localStorage for now (could be database later)
+    const savedRecipes = JSON.parse(localStorage.getItem("savedRecipes") || "[]");
+    savedRecipes.push(recipe);
+    localStorage.setItem("savedRecipes", JSON.stringify(savedRecipes));
+    
+    alert("✨ Recipe saved successfully!");
+  };
+
+  const clearCanvas = () => {
+    if (confirm("🗑️ Are you sure you want to clear the canvas? This cannot be undone.")) {
+      setState("flowNodes", []);
+      setState("flowConnections", []);
+    }
+  };
+
+  const exportRecipe = () => {
+    const nodes = getState("flowNodes", []);
+    const connections = getState("flowConnections", []);
+    const recipe = {
+      title: exampleRecipe.recipe.title,
+      description: exampleRecipe.recipe.description,
+      nodes,
+      connections,
+      exportedAt: new Date().toISOString()
+    };
+    
+    const dataStr = JSON.stringify(recipe, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'recipe-flow.json';
+    link.click();
+  };
+
   return {
     render: () => ({
       div: {
-        class: "flex",
+        class: "flex flex-col h-screen",
         children: [
-          {FlowEditorSidebar},
+          // Top toolbar
           {
             div: {
-              class: "flex-1 overflow-auto",
-              children: ()=> [
-                {FlowRenderer: {exampleRecipe }},
-                {NodeEditDialog}
+              class: "bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-4 shadow-lg",
+              children: [
+                {
+                  div: {
+                    class: "flex items-center justify-between",
+                    children: [
+                      {
+                        div: {
+                          class: "flex items-center gap-3",
+                          children: [
+                            { span: { class: "text-2xl", text: "🍳" } },
+                            {
+                              h1: {
+                                class: "text-xl font-bold",
+                                text: exampleRecipe.recipe.title
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        div: {
+                          class: "flex items-center gap-3",
+                          children: [
+                            {
+                              button: {
+                                class: "bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:scale-105",
+                                text: "💾 Save Recipe",
+                                onclick: saveRecipe
+                              }
+                            },
+                            {
+                              button: {
+                                class: "bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:scale-105",
+                                text: "📤 Export JSON",
+                                onclick: exportRecipe
+                              }
+                            },
+                            {
+                              button: {
+                                class: "bg-red-500/80 hover:bg-red-500 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:scale-105",
+                                text: "🗑️ Clear All",
+                                onclick: clearCanvas
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          // Main content
+          {
+            div: {
+              class: "flex flex-1",
+              children: [
+                {FlowEditorSidebar},
+                {
+                  div: {
+                    class: "flex-1 overflow-auto relative",
+                    children: ()=> [
+                      {FlowRenderer: {exampleRecipe }},
+                      {NodeEditDialog}
+                    ]
+                  }
+                }
               ]
             }
           }

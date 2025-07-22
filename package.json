@@ -14,6 +14,8 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.1.11",
     "juris": "^0.86.0",
-    "tailwindcss": "^4.1.11"
+    "lucide-react": "^0.525.0",
+    "tailwindcss": "^4.1.11",
+    "uuid": "^11.1.0"
   }
 }
