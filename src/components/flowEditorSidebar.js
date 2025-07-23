@@ -99,11 +99,11 @@ const FlowEditorSidebar = (props, context) => {
                 },
                 {
                   div: {
-                    class: "mb-4 flex gap-2",
+                    class: "mb-4 flex flex-wrap gap-2 items-center",
                     children: [
-                      { input: { class: "flex-1 p-2 border rounded", placeholder: "Custom ingredient", value: ingredientInput, oninput: e => setIngredientInput(e.target.value) } },
-                      { input: { class: "w-24 p-2 border rounded", placeholder: "Qty", value: ingredientQty, oninput: e => setIngredientQty(e.target.value) } },
-                      { button: { class: "bg-amber-400 px-3 py-2 rounded text-white font-bold", text: "Add", onclick: addCustomIngredient } }
+                      { input: { class: "flex-1 min-w-0 p-2 border rounded", placeholder: "Custom ingredient", value: ingredientInput, oninput: e => setIngredientInput(e.target.value) } },
+                      { input: { class: "w-24 min-w-0 p-2 border rounded", placeholder: "Qty", value: ingredientQty, oninput: e => setIngredientQty(e.target.value) } },
+                      { button: { class: "bg-amber-400 px-3 py-2 rounded text-white font-bold flex-shrink-0", style: "min-width:64px", text: "Add", onclick: addCustomIngredient } }
                     ]
                   }
                 },
@@ -147,11 +147,11 @@ const FlowEditorSidebar = (props, context) => {
                 },
                 {
                   div: {
-                    class: "mb-4 flex gap-2",
+                    class: "mb-4 flex flex-wrap gap-2 items-center",
                     children: [
-                      { input: { class: "flex-1 p-2 border rounded", placeholder: "Custom step", value: stepInput, oninput: e => setStepInput(e.target.value) } },
-                      { input: { class: "w-24 p-2 border rounded", placeholder: "Duration", value: stepDuration, oninput: e => setStepDuration(e.target.value) } },
-                      { button: { class: "bg-blue-400 px-3 py-2 rounded text-white font-bold", text: "Add", onclick: addCustomStep } }
+                      { input: { class: "flex-1 min-w-0 p-2 border rounded", placeholder: "Custom step", value: stepInput, oninput: e => setStepInput(e.target.value) } },
+                      { input: { class: "w-24 min-w-0 p-2 border rounded", placeholder: "Duration", value: stepDuration, oninput: e => setStepDuration(e.target.value) } },
+                      { button: { class: "bg-blue-400 px-3 py-2 rounded text-white font-bold flex-shrink-0", style: "min-width:64px", text: "Add", onclick: addCustomStep } }
                     ]
                   }
                 },
