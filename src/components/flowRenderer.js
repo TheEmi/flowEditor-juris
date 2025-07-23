@@ -161,10 +161,25 @@ const FlowRenderer = (props, context) => {
     });
   };
 
+  // Add state for node action button visibility
+  const visibleNodeActions = getState("visibleNodeActions", null);
+  // Detect mobile
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  // Hide node actions on click outside (mobile)
+  if (typeof window !== "undefined" && isMobile) {
+    window.__jurisNodeActionListener = window.__jurisNodeActionListener || false;
+    if (!window.__jurisNodeActionListener) {
+      window.addEventListener("click", (e) => {
+        if (!e.target.closest(".node-action-area")) setState("visibleNodeActions", null);
+      });
+      window.__jurisNodeActionListener = true;
+    }
+  }
+
   return {
     render: () => ({
       div: {
-        class: "relative w-full h-full bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 overflow-auto",
+        class: "relative w-full h-full bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 overflow-x-auto overflow-y-auto",
         onmousemove: onMouseMove,
         onmouseup: onMouseUp,
         ontouchmove: onMouseMove,
@@ -215,7 +230,7 @@ const FlowRenderer = (props, context) => {
                   ...nodes.map((node, index) => {
                     const isConnecting = connectionMode?.from === node.id;
                     const isIngredient = node.type === "ingredient" || node.type === "type 1";
-                    
+                    const showActions = isMobile ? visibleNodeActions === node.id : getState("hoveredNodeId") === node.id;
                     return {
                       div: {
                         key: `node-${node.id}`,
@@ -225,7 +240,6 @@ const FlowRenderer = (props, context) => {
                             ? "bg-gradient-to-br from-amber-100 to-orange-200 border-amber-300 hover:from-amber-200 hover:to-orange-300" 
                             : "bg-gradient-to-br from-blue-100 to-cyan-200 border-blue-300 hover:from-blue-200 hover:to-cyan-300";
                           const connectingClasses = isConnecting ? "ring-4 ring-purple-400 scale-110" : "hover:scale-105";
-                          
                           return `${baseClasses} ${typeClasses} ${connectingClasses}`;
                         },
                         style: () => ({
@@ -238,7 +252,6 @@ const FlowRenderer = (props, context) => {
                           const nodeRect = e.currentTarget.getBoundingClientRect();
                           const offsetX = e.clientX - nodeRect.left;
                           const offsetY = e.clientY - nodeRect.top;
-
                           setState("draggingNodeId", node.id);
                           setState("dragOffset", { x: offsetX, y: offsetY });
                         },
@@ -248,11 +261,19 @@ const FlowRenderer = (props, context) => {
                           const nodeRect = e.currentTarget.getBoundingClientRect();
                           const offsetX = touch.clientX - nodeRect.left;
                           const offsetY = touch.clientY - nodeRect.top;
-
                           setState("draggingNodeId", node.id);
                           setState("dragOffset", { x: offsetX, y: offsetY });
                         },
-                        onclick: () => handleNodeClick(node),
+                        onmouseenter: () => { if (!isMobile) setState("hoveredNodeId", node.id); },
+                        onmouseleave: () => { if (!isMobile) setState("hoveredNodeId", null); },
+                        onclick: (e) => {
+                          if (isMobile) {
+                            setState("visibleNodeActions", visibleNodeActions === node.id ? null : node.id);
+                            e.stopPropagation();
+                          } else {
+                            handleNodeClick(node);
+                          }
+                        },
                         children: [
                           {
                             div: {
@@ -316,9 +337,9 @@ const FlowRenderer = (props, context) => {
                               text: "🔗"
                             }
                           }] : []),
-                          {
+                          showActions ? {
                             div: {
-                              class: "absolute -top-2 -right-2 flex gap-1",
+                              class: "absolute -top-2 -right-2 flex gap-1 node-action-area",
                               children: [
                                 {
                                   button: {
@@ -339,10 +360,20 @@ const FlowRenderer = (props, context) => {
                                       handleDeleteNode(node.id);
                                     }
                                   }
+                                },
+                                {
+                                  button: {
+                                    class: "w-8 h-8 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg transition-all duration-200",
+                                    text: "✏️",
+                                    onclick: (e) => {
+                                      e.stopPropagation();
+                                      setState("selectedNode", node);
+                                    }
+                                  }
                                 }
                               ]
                             }
-                          }
+                          } : null
                         ]
                       }
                     };

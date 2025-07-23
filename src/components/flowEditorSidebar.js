@@ -32,11 +32,41 @@ const FlowEditorSidebar = (props, context) => {
     setState("flowNodes", [...nodes, newNode]);
   };
 
+  // Add state for custom ingredients, steps, and sidebar collapse
+  const customIngredients = getState("customIngredients", []);
+  const customSteps = getState("customSteps", []);
+  const sidebarCollapsed = getState("sidebarCollapsed", false);
+  const [ingredientInput, setIngredientInput] = [getState("ingredientInput", ""), v => setState("ingredientInput", v)];
+  const [ingredientQty, setIngredientQty] = [getState("ingredientQty", ""), v => setState("ingredientQty", v)];
+  const [stepInput, setStepInput] = [getState("stepInput", ""), v => setState("stepInput", v)];
+  const [stepDuration, setStepDuration] = [getState("stepDuration", ""), v => setState("stepDuration", v)];
+
+  const addCustomIngredient = () => {
+    if (!ingredientInput.trim()) return;
+    setState("customIngredients", [...customIngredients, { label: `🥄 ${ingredientInput}`, quantity: ingredientQty, icon: "🥄" }]);
+    setIngredientInput("");
+    setIngredientQty("");
+  };
+  const addCustomStep = () => {
+    if (!stepInput.trim()) return;
+    setState("customSteps", [...customSteps, { action: stepInput, label: `⚡ ${stepInput}`, duration: stepDuration, icon: "⚡" }]);
+    setStepInput("");
+    setStepDuration("");
+  };
+
   return {
     render: () => ({
       div: {
-        class: "w-96 h-full bg-gradient-to-br from-purple-50 to-pink-50 border-r border-purple-200 shadow-xl overflow-y-auto flex-shrink-0",
+        class: sidebarCollapsed ? "w-0 h-full overflow-hidden transition-all duration-300" : "w-96 h-full bg-gradient-to-br from-purple-50 to-pink-50 border-r border-purple-200 shadow-xl overflow-y-auto flex-shrink-0 transition-all duration-300",
         children: [
+          // Collapse/expand button (mobile)
+          {
+            button: {
+              class: "md:hidden absolute top-4 left-4 z-50 bg-purple-600 text-white rounded-full p-2 shadow-lg",
+              onclick: () => setState("sidebarCollapsed", !sidebarCollapsed),
+              text: sidebarCollapsed ? "➡️" : "⬅️"
+            }
+          },
           {
             div: {
               class: "p-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white",
@@ -69,8 +99,18 @@ const FlowEditorSidebar = (props, context) => {
                 },
                 {
                   div: {
+                    class: "mb-4 flex gap-2",
+                    children: [
+                      { input: { class: "flex-1 p-2 border rounded", placeholder: "Custom ingredient", value: ingredientInput, oninput: e => setIngredientInput(e.target.value) } },
+                      { input: { class: "w-24 p-2 border rounded", placeholder: "Qty", value: ingredientQty, oninput: e => setIngredientQty(e.target.value) } },
+                      { button: { class: "bg-amber-400 px-3 py-2 rounded text-white font-bold", text: "Add", onclick: addCustomIngredient } }
+                    ]
+                  }
+                },
+                {
+                  div: {
                     class: "space-y-2 mb-6",
-                    children: builtInIngredients.map((i) => ({
+                    children: [...builtInIngredients, ...customIngredients].map((i) => ({
                       div: {
                         class: "p-3 bg-gradient-to-r from-amber-100 to-orange-100 hover:from-amber-200 hover:to-orange-200 rounded-xl cursor-pointer transition-all duration-200 transform hover:scale-105 border border-amber-200",
                         onclick: () => addToCanvas(i, "ingredient"),
@@ -107,8 +147,18 @@ const FlowEditorSidebar = (props, context) => {
                 },
                 {
                   div: {
+                    class: "mb-4 flex gap-2",
+                    children: [
+                      { input: { class: "flex-1 p-2 border rounded", placeholder: "Custom step", value: stepInput, oninput: e => setStepInput(e.target.value) } },
+                      { input: { class: "w-24 p-2 border rounded", placeholder: "Duration", value: stepDuration, oninput: e => setStepDuration(e.target.value) } },
+                      { button: { class: "bg-blue-400 px-3 py-2 rounded text-white font-bold", text: "Add", onclick: addCustomStep } }
+                    ]
+                  }
+                },
+                {
+                  div: {
                     class: "space-y-2",
-                    children: builtInSteps.map((s) => ({
+                    children: [...builtInSteps, ...customSteps].map((s) => ({
                       div: {
                         class: "p-3 bg-gradient-to-r from-blue-100 to-cyan-100 hover:from-blue-200 hover:to-cyan-200 rounded-xl cursor-pointer transition-all duration-200 transform hover:scale-105 border border-blue-200",
                         onclick: () => addToCanvas(s, "step"),

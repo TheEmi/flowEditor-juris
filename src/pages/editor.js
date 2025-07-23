@@ -89,6 +89,8 @@ const EditorPage = (props, context) => {
     link.click();
   };
 
+  const sidebarCollapsed = getState("sidebarCollapsed", false);
+
   return {
     render: () => ({
       div: {
@@ -156,10 +158,10 @@ const EditorPage = (props, context) => {
             div: {
               class: "flex flex-1 overflow-hidden",
               children: [
-                {FlowEditorSidebar},
+                !sidebarCollapsed ? {FlowEditorSidebar} : null,
                 {
                   div: {
-                    class: "flex-1 relative",
+                    class: sidebarCollapsed ? "flex-1 relative w-full" : "flex-1 relative",
                     children: ()=> [
                       {FlowRenderer: {exampleRecipe }},
                       {NodeEditDialog}
