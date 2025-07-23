@@ -165,6 +165,8 @@ const FlowRenderer = (props, context) => {
   const visibleNodeActions = getState("visibleNodeActions", null);
   // Detect mobile
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  // Track dragging
+  const draggingNodeId = getState("draggingNodeId", null);
   // Hide node actions on click outside (mobile)
   if (typeof window !== "undefined" && isMobile) {
     window.__jurisNodeActionListener = window.__jurisNodeActionListener || false;
@@ -191,11 +193,11 @@ const FlowRenderer = (props, context) => {
           return [
             {
               div: {
-                class: "relative",
+                class: "block",
                 style: {
                   width: "2000px",
                   height: "1500px",
-                  minWidth: "100%",
+                  minWidth: "1200px",
                   minHeight: "100%"
                 },
                 children: [
@@ -264,14 +266,15 @@ const FlowRenderer = (props, context) => {
                           setState("draggingNodeId", node.id);
                           setState("dragOffset", { x: offsetX, y: offsetY });
                         },
-                        onmouseenter: () => { if (!isMobile) setState("hoveredNodeId", node.id); },
-                        onmouseleave: () => { if (!isMobile) setState("hoveredNodeId", null); },
+                        onmouseenter: () => { if (!isMobile && !draggingNodeId) setState("hoveredNodeId", node.id); },
+                        onmouseleave: () => { if (!isMobile && !draggingNodeId) setState("hoveredNodeId", null); },
                         onclick: (e) => {
                           if (isMobile) {
                             setState("visibleNodeActions", visibleNodeActions === node.id ? null : node.id);
                             e.stopPropagation();
                           } else {
-                            handleNodeClick(node);
+                            // Only trigger node click if not dragging
+                            if (!draggingNodeId) handleNodeClick(node);
                           }
                         },
                         children: [
@@ -367,7 +370,7 @@ const FlowRenderer = (props, context) => {
                                     text: "✏️",
                                     onclick: (e) => {
                                       e.stopPropagation();
-                                      setState("selectedNode", node);
+                                      setState("selectedNode", { ...node });
                                     }
                                   }
                                 }
