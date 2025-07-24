@@ -2,13 +2,11 @@ const NodeEditDialog = (props, context) => {
   const { getState, setState } = context;
   const node = getState("selectedNode", null);
 
-  if (!node) return { render: () => ({}) }; // Don't render if no node selected
-
   const close = () => setState("selectedNode", null);
 
   const updateNode = () => {
-    const nodes = getState("flowNodes", []);
-    const updatedNodes = nodes.map((n) => n.id === node.id ? node : n);
+    const nodes = getState("flowNodes", {});
+    const updatedNodes = { ...nodes, [getState("selectedNodeId", null)]: node };
     setState("flowNodes", updatedNodes);
     close();
   };

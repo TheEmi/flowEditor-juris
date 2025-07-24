@@ -7,28 +7,28 @@ const EditorPage = (props, context) => {
     recipe: {
       title: "Spaghetti Bolognese Flow",
       description: "A visual recipe for the perfect pasta dish",
-      nodes: [
-        { id: "node1", type: "ingredient", label: "🍝 Spaghetti", quantity: "400g", icon: "🍝", x: 150, y: 100 },
-        { id: "node2", type: "ingredient", label: "🥩 Ground Beef", quantity: "300g", icon: "🥩", x: 150, y: 220 },
-        { id: "node3", type: "ingredient", label: "🍅 Tomato Sauce", quantity: "1 cup", icon: "🍅", x: 150, y: 340 },
-        { id: "node4", type: "ingredient", label: "🧄 Garlic", quantity: "3 cloves", icon: "🧄", x: 150, y: 460 },
-        { id: "node5", type: "step", action: "Boil", label: "💧 Boil Water", duration: "8 minutes", icon: "💧", x: 450, y: 100 },
-        { id: "node6", type: "step", action: "Cook", label: "🔥 Cook Pasta", duration: "10 minutes", icon: "🔥", x: 750, y: 100 },
-        { id: "node7", type: "step", action: "Sauté", label: "🍳 Sauté Garlic", duration: "2 minutes", icon: "🍳", x: 450, y: 300 },
-        { id: "node8", type: "step", action: "Cook", label: "🥩 Brown Beef", duration: "8 minutes", icon: "🥩", x: 750, y: 300 },
-        { id: "node9", type: "step", action: "Simmer", label: "🥄 Add Sauce & Simmer", duration: "15 minutes", icon: "🥄", x: 1050, y: 300 },
-        { id: "node10", type: "step", action: "Combine", label: "🍽️ Mix & Serve", duration: "3 minutes", icon: "🍽️", x: 1350, y: 200 }
-      ],
+      nodes: {
+        "1":{ type: "ingredient", label: "🍝 Spaghetti", quantity: "400g", icon: "🍝", x: 150, y: 100 },
+        "2":{ type: "ingredient", label: "🥩 Ground Beef", quantity: "300g", icon: "🥩", x: 150, y: 220 },
+        "3":{ type: "ingredient", label: "🍅 Tomato Sauce", quantity: "1 cup", icon: "🍅", x: 150, y: 340 },
+        "4":{ type: "ingredient", label: "🧄 Garlic", quantity: "3 cloves", icon: "🧄", x: 150, y: 460 },
+        "5":{ type: "step", action: "Boil", label: "💧 Boil Water", duration: "8 minutes", icon: "💧", x: 450, y: 100 },
+        "6":{ type: "step", action: "Cook", label: "🔥 Cook Pasta", duration: "10 minutes", icon: "🔥", x: 750, y: 100 },
+        "7":{ type: "step", action: "Sauté", label: "🍳 Sauté Garlic", duration: "2 minutes", icon: "🍳", x: 450, y: 300 },
+        "8":{ type: "step", action: "Cook", label: "🥩 Brown Beef", duration: "8 minutes", icon: "🥩", x: 750, y: 300 },
+        "9":{ type: "step", action: "Simmer", label: "🥄 Add Sauce & Simmer", duration: "15 minutes", icon: "🥄", x: 1050, y: 300 },
+        "10":{ type: "step", action: "Combine", label: "🍽️ Mix & Serve", duration: "3 minutes", icon: "🍽️", x: 1350, y: 200 }
+      },
       connections: [
-        { from: "node1", to: "node5" },
-        { from: "node5", to: "node6" },
-        { from: "node4", to: "node7" },
-        { from: "node2", to: "node8" },
-        { from: "node7", to: "node8" },
-        { from: "node3", to: "node9" },
-        { from: "node8", to: "node9" },
-        { from: "node6", to: "node10" },
-        { from: "node9", to: "node10" }
+        { from: "1", to: "5" },
+        { from: "5", to: "6" },
+        { from: "4", to: "7" },
+        { from: "2", to: "8" },
+        { from: "7", to: "8" },
+        { from: "3", to: "9" },
+        { from: "8", to: "9" },
+        { from: "6", to: "10" },
+        { from: "9", to: "10" }
       ]
     }
   };
@@ -164,7 +164,7 @@ const EditorPage = (props, context) => {
                     class: sidebarCollapsed ? "flex-1 relative w-full" : "flex-1 relative",
                     children: ()=> [
                       {FlowRenderer: {exampleRecipe }},
-                      {NodeEditDialog}
+                      getState("selectedNode", false) ? {NodeEditDialog} : null
                     ]
                   }
                 }

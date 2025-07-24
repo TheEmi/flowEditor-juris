@@ -21,7 +21,7 @@ const FlowEditorSidebar = (props, context) => {
   const addToCanvas = (item, type) => {
     const nodes = getState("flowNodes", []);
     const newNode = {
-      id: generateId(),
+      id: "n"+(nodes.length + 1),
       type: type,
       label: item.label,
       icon: item.icon || (type === "ingredient" ? "🥄" : "⚡"),
@@ -30,41 +30,35 @@ const FlowEditorSidebar = (props, context) => {
       ...(type === "ingredient" ? { quantity: item.quantity } : { action: item.action, duration: item.duration })
     };
     setState("flowNodes", [...nodes, newNode]);
+    setState(`flowNodes.ids.${newNode.id}`, newNode);
+    console.log("Item added to canvas:", newNode);
   };
-
-  // Add state for custom ingredients, steps, and sidebar collapse
-  const customIngredients = getState("customIngredients", []);
-  const customSteps = getState("customSteps", []);
-  const sidebarCollapsed = getState("sidebarCollapsed", false);
-  const [ingredientInput, setIngredientInput] = [getState("ingredientInput", ""), v => setState("ingredientInput", v)];
-  const [ingredientQty, setIngredientQty] = [getState("ingredientQty", ""), v => setState("ingredientQty", v)];
-  const [stepInput, setStepInput] = [getState("stepInput", ""), v => setState("stepInput", v)];
-  const [stepDuration, setStepDuration] = [getState("stepDuration", ""), v => setState("stepDuration", v)];
 
   const addCustomIngredient = () => {
-    if (!ingredientInput.trim()) return;
-    setState("customIngredients", [...customIngredients, { label: `🥄 ${ingredientInput}`, quantity: ingredientQty, icon: "🥄" }]);
-    setIngredientInput("");
-    setIngredientQty("");
+    if (!getState("ingredientInput", "").trim()) return;
+    setState("customIngredients", [...getState("customIngredients", []), { label: `🥄 ${getState("ingredientInput", "")}`, quantity: getState("ingredientQty", ""), icon: "🥄" }]);
+    setState("ingredientInput", "");
+    setState("ingredientQty", "");
+    console.log("Custom ingredient added:", getState("customIngredients"));
   };
   const addCustomStep = () => {
-    if (!stepInput.trim()) return;
-    setState("customSteps", [...customSteps, { action: stepInput, label: `⚡ ${stepInput}`, duration: stepDuration, icon: "⚡" }]);
-    setStepInput("");
-    setStepDuration("");
+    if (!getState("stepInput", "").trim()) return;
+    setState("customSteps", [...customSteps, { action: getState("stepInput", ""), label: `⚡ ${getState("stepInput", "")}`, duration: getState("stepDuration", ""), icon: "⚡" }]);
+    setState("stepInput", "");
+    setState("stepDuration", "");
   };
 
   return {
     render: () => ({
       div: {
-        class: sidebarCollapsed ? "w-0 h-full overflow-hidden transition-all duration-300" : "w-96 h-full bg-gradient-to-br from-purple-50 to-pink-50 border-r border-purple-200 shadow-xl overflow-y-auto flex-shrink-0 transition-all duration-300",
+        class: () => getState("sidebarCollapsed", false) ? "w-0 h-full overflow-hidden transition-all duration-300" : "w-96 h-full bg-gradient-to-br from-purple-50 to-pink-50 border-r border-purple-200 shadow-xl overflow-y-auto flex-shrink-0 transition-all duration-300",
         children: [
           // Collapse/expand button (mobile)
           {
             button: {
-              class: "md:hidden absolute top-4 left-4 z-50 bg-purple-600 text-white rounded-full p-2 shadow-lg",
-              onclick: () => setState("sidebarCollapsed", !sidebarCollapsed),
-              text: sidebarCollapsed ? "➡️" : "⬅️"
+              class: "absolute top-4 left-4 z-50 bg-purple-600 text-white rounded-full p-2 shadow-lg",
+              onclick: () => setState("sidebarCollapsed", !getState("sidebarCollapsed", false)),
+              text: ()=>getState("sidebarCollapsed", false) ? "➡️" : "⬅️"
             }
           },
           {
@@ -101,16 +95,16 @@ const FlowEditorSidebar = (props, context) => {
                   div: {
                     class: "mb-4 flex flex-wrap gap-2 items-center",
                     children: [
-                      { input: { class: "flex-1 min-w-0 p-2 border rounded", placeholder: "Custom ingredient", value: ingredientInput, oninput: e => setIngredientInput(e.target.value) } },
-                      { input: { class: "w-24 min-w-0 p-2 border rounded", placeholder: "Qty", value: ingredientQty, oninput: e => setIngredientQty(e.target.value) } },
-                      { button: { class: "bg-amber-400 px-3 py-2 rounded text-white font-bold flex-shrink-0", style: "min-width:64px", text: "Add", onclick: addCustomIngredient } }
+                      { input: { class: "flex-1 min-w-0 p-2 border rounded", placeholder: "Custom ingredient", value: getState("ingredientInput", ""), oninput: e => setState("ingredientInput", e.target.value) } },
+                      { input: { class: "w-24 min-w-0 p-2 border rounded", placeholder: "Qty", value: getState("ingredientQty", ""), oninput: e => setState("ingredientQty", e.target.value) } },
+                      { button: { class: "cursor-pointer bg-amber-400 px-3 py-2 rounded text-white font-bold flex-shrink-0", style: "min-width:64px", text: "Add", onclick: addCustomIngredient } }
                     ]
                   }
                 },
                 {
                   div: {
                     class: "space-y-2 mb-6",
-                    children: [...builtInIngredients, ...customIngredients].map((i) => ({
+                    children: ()=>[...builtInIngredients, ...getState("customIngredients", [])].map((i) => ({
                       div: {
                         class: "p-3 bg-gradient-to-r from-amber-100 to-orange-100 hover:from-amber-200 hover:to-orange-200 rounded-xl cursor-pointer transition-all duration-200 transform hover:scale-105 border border-amber-200",
                         onclick: () => addToCanvas(i, "ingredient"),
@@ -149,16 +143,16 @@ const FlowEditorSidebar = (props, context) => {
                   div: {
                     class: "mb-4 flex flex-wrap gap-2 items-center",
                     children: [
-                      { input: { class: "flex-1 min-w-0 p-2 border rounded", placeholder: "Custom step", value: stepInput, oninput: e => setStepInput(e.target.value) } },
-                      { input: { class: "w-24 min-w-0 p-2 border rounded", placeholder: "Duration", value: stepDuration, oninput: e => setStepDuration(e.target.value) } },
-                      { button: { class: "bg-blue-400 px-3 py-2 rounded text-white font-bold flex-shrink-0", style: "min-width:64px", text: "Add", onclick: addCustomStep } }
+                      { input: { class: "flex-1 min-w-0 p-2 border rounded", placeholder: "Custom step", value: getState("stepInput", ""), oninput: e => setState("stepInput", e.target.value) } },
+                      { input: { class: "w-24 min-w-0 p-2 border rounded", placeholder: "Duration", value: getState("stepDuration", "") , oninput: e => setState("stepDuration", e.target.value) } },
+                      { button: { class: "cursor-pointer bg-blue-400 px-3 py-2 rounded text-white font-bold flex-shrink-0", style: "min-width:64px", text: "Add", onclick: addCustomStep } }
                     ]
                   }
                 },
                 {
                   div: {
                     class: "space-y-2",
-                    children: [...builtInSteps, ...customSteps].map((s) => ({
+                    children: ()=>[...builtInSteps, ...getState("customSteps", [])].map((s) => ({
                       div: {
                         class: "p-3 bg-gradient-to-r from-blue-100 to-cyan-100 hover:from-blue-200 hover:to-cyan-200 rounded-xl cursor-pointer transition-all duration-200 transform hover:scale-105 border border-blue-200",
                         onclick: () => addToCanvas(s, "step"),
