@@ -41,6 +41,7 @@ const FlowRenderer = (props, context) => {
       setState("connectionMode", null);
     } else {
       setState("selectedNode", node);
+      setState("selectedNodeId", id);
     }
   };
 
